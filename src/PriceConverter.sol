@@ -1,22 +1,33 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity ^0.8.18;
 
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+// import interface from "https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol" 
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol"; 
 
 library PriceConverter {
-    function getPrice(AggregatorV3Interface priceFeed) internal view returns (uint256) {
-        (, int256 answer,,,) = priceFeed.latestRoundData();
-        // ETH/USD rate in 18 digit
-        return uint256(answer * 10000000000);
+    // get the price of ethereum
+    function getPrice() internal view returns(uint256) {
+        // we need to use chain link data feeds
+        // since this is a instance of us interacting with contract outside of the project we need two thigs
+        // 1. ABI of the contract
+        // 2. Address of the contract =>  get from "https://docs.chain.link/data-feeds/price-feeds/addresses?network=ethereum&page=1#sepolia-testnet"
+        // address 0x694AA1769357215DE4FAC081bf1f309aDC325306
+        
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306); // contract address of ethereum => usd SEPOLIA
+        // the interface gives us some methods to use
+        (,int256 answer,,,) = priceFeed.latestRoundData();  // price of Eth in USD (has 8 decimal)
+        return uint256(answer * 1e10); // msg.value has 18 decimals, answer has 8 decimals so we should times it to 1e10;
     }
 
-    // 1000000000
-    // call it get fiatConversionRate, since it assumes something about decimals
-    // It wouldn't work for every aggregator
-    function getConversionRate(uint256 ethAmount, AggregatorV3Interface priceFeed) internal view returns (uint256) {
-        uint256 ethPrice = getPrice(priceFeed);
-        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;
-        // the actual ETH/USD conversation rate, after adjusting the extra 0s.
+    function getVersion() internal view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306); // contract address of ethereum => usd SEPOLIA
+        return priceFeed.version();
+    }
+
+    // convert the msg.value frim ethereum to terms of dollors
+    function getConversionRate(uint256 ethAmount) internal view returns(uint256) {
+        uint256 ethPrice = getPrice();
+        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1e18;
         return ethAmountInUsd;
     }
 }
