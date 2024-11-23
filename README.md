@@ -1,66 +1,80 @@
-## Foundry
+# Foundry Fund Me
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Welcome to the Fund Me section of this Foundry course! To get started, you can visit the [Github repository](https://github.com/Cyfrin/foundry-fund-me-cu) associated with this section. By the end of this course, you'll be able to push your first codebase to Github 🎉.
 
-Foundry consists of:
+> 💡 **TIP**:br
+> Being active on a version control system like Github or [Radicle](https://radicle.xyz/) is essential for participating in the web3 ecosystem 👥.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+In this section, we'll refer to the `FundMe` contract we built in the previous section. Additionally, we will explore storage using the [`FunWithStorage`](https://github.com/Cyfrin/foundry-fund-me-cu/blob/main/src/exampleContracts/FunWithStorage.sol) contract and interact with it using `cast`.
 
-## Documentation
+We'll also learn professional deployment techniques on different chains with Foundry **[scripts](https://github.com/Cyfrin/foundry-fund-me-cu/blob/main/script/DeployFundMe.s.sol)**. They will enable us to interact with contracts through **reproducible actions** instead of typing commands manually each time.
 
-https://book.getfoundry.sh/
+Furthermore, we'll cover making contracts more gas-efficient, some debugging techniques, and setting up a professional development environment.
+Lastly, we'll implement a lot of **tests** to ensure the reliability and security of our smart contracts.
 
-## Usage
+## Setup
 
-### Build
+Welcome the second section of `Foundry Fundamentals`. Here we'll cover `Fund Me`, a simple funding contract.
 
-```shell
-$ forge build
+You will learn:
+
+* How to push your project to GitHub
+* Write and run amazing tests
+* Advanced deploy scripts, used to deploy on different chains that require different addresses
+* How to use scripts to interact with contracts, so we can easily reproduce our actions
+* How to use a price feed
+* How to use Chisel
+* Smart contract automation
+* How to make our contracts more gas efficient
+* And many more interesting things!
+
+Until now, we talked a lot about storage and state, but we didn't delve into what they really mean. We will learn what all these means!
+
+We used this project before when we used Remix.
+
+### Fund Me
+
+Going through the [repo](https://github.com/Cyfrin/foundry-fund-me-f23) we can see that our contract is in the `src` folder. Let's open `FundMe.sol`.
+
+As you can see we are employing some advanced tools/standard naming conventions:
+
+* We use a named error `FundMe__NotOwner();`
+* We use all caps for constants
+* `i_` for immutable variables
+* `s_` for private variables
+
+Let's clone this project locally. Open your VS Code, and make sure you are in the `foundry-f23` folder, if not use `cd` to navigate to it.
+
+If we run the `ls` command in the terminal, we'll see that the only thing present in the `foundry-f23` folder is the `foundry-simple-storage-f23` folder that we used in the previous section.
+
+Run the following command in your terminal:
+
+```Solidity
+mkdir foundry-fund-me-f23
+cd foundry-fund-me-f23
+code .
 ```
 
-### Test
+The first line creates a new folder called `foundry-fund-me-f23`. The second line changed the directory into the newly created folder. The last line opens up a new VS Code instance using the newly created folder.
 
-```shell
-$ forge test
+Now we can apply the knowledge we acquired in the previous section to create a fresh Foundry project.
+
+**Do you remember how?**
+
+If you do, please proceed in creating a Foundry project on your own. If not peek down below.
+
+No worries, we all forget stuff, please run the following command:
+
+```Solidity
+forge init
 ```
 
-### Format
+or
 
-```shell
-$ forge fmt
+```Solidity
+forge init --force
 ```
 
-### Gas Snapshots
+Foundry will populate the project with the `Counter` files, the script, the main contract and the test.
 
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Before deleting it, let's look a bit through these.
