@@ -6,6 +6,9 @@ import {MockV3Aggregator} from '../test/mock/MockV3Aggregator.sol';
 
 contract HelperConfig is Script {
     NetworkConfig public activeNetworkConfig;
+    
+    uint8 public constant DECIMALS = 8;
+    int256 public constant INITIAL_PRICE = 2000e8;
 
     struct NetworkConfig {
         address priceFeed;
@@ -25,7 +28,7 @@ contract HelperConfig is Script {
 
     function getAnvilEthConfig() public returns (NetworkConfig memory) {
         vm.startBroadcast();
-        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(8, 2000e8);
+        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
         vm.stopBroadcast();
 
         NetworkConfig memory anvilConfig = NetworkConfig({
