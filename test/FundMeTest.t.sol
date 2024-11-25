@@ -62,7 +62,7 @@ contract FundMeTest is Test {
         vm.prank(USER);
         fundMe.withdraw();
     }
-    
+
     function testWithdrawWithASingleFunder() public funded {
         // Arrange
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
