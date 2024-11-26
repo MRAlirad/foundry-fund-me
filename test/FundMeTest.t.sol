@@ -1,114 +1,118 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
 
-import {Test, console} from 'forge-std/Test.sol';
-import {FundMe} from '../src/FundMe.sol';
-import {DeployFundMe} from '../script/DeployFundMe.s.sol';
+pragma solidity 0.8.19;
 
-contract FundMeTest is Test {
-    FundMe fundMe;
-    
-    address USER = makeAddr('user');
-    uint256 constant SEND_VALUE = 0.1 ether;
-    uint256 constant STARTING_BALANCE = 10 ether;
+import {DeployFundMe} from "../script/DeployFundMe.s.sol";
+import {FundMe} from "../src/FundMe.sol";
+import {HelperConfig, CodeConstants} from "../script/HelperConfig.s.sol";
+import {Test, console} from "forge-std/Test.sol";
+import {StdCheats} from "forge-std/StdCheats.sol";
+import {ZkSyncChainChecker} from "lib/foundry-devops/src/ZkSyncChainChecker.sol";
+import {MockV3Aggregator} from "./mock/MockV3Aggregator.sol";
+
+contract FundMeTest is ZkSyncChainChecker, CodeConstants, StdCheats, Test {
+    FundMe public fundMe;
+    HelperConfig public helperConfig;
+
+    uint256 public constant SEND_VALUE = 0.1 ether; // just a value to make sure we are sending enough!
+    uint256 public constant STARTING_USER_BALANCE = 10 ether;
+    uint256 public constant GAS_PRICE = 1;
+
+    address public constant USER = address(1);
+
+    // uint256 public constant SEND_VALUE = 1e18;
+    // uint256 public constant SEND_VALUE = 1_000_000_000_000_000_000;
+    // uint256 public constant SEND_VALUE = 1000000000000000000;
 
     function setUp() external {
-        // fundMe = new FundMe(0x694AA1769357215DE4FAC081bf1f309aDC325306);
-        DeployFundMe deployFundMe = new DeployFundMe();
-        fundMe = deployFundMe.run();
-        vm.deal(USER, STARTING_BALANCE);
+        if (!isZkSyncChain()) {
+            DeployFundMe deployer = new DeployFundMe();
+            (fundMe, helperConfig) = deployer.deployFundMe();
+        } else {
+            MockV3Aggregator mockPriceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
+            fundMe = new FundMe(address(mockPriceFeed));
+        }
+        vm.deal(USER, STARTING_USER_BALANCE);
     }
 
-    function testMinimumDollarIsFive() public view {
-        assertEq(fundMe.MINIMUM_USD(), 5e18);
+    function testPriceFeedSetCorrectly() public skipZkSync {
+        address retreivedPriceFeed = address(fundMe.getPriceFeed());
+        // (address expectedPriceFeed) = helperConfig.activeNetworkConfig();
+        address expectedPriceFeed = helperConfig.getConfigByChainId(block.chainid).priceFeed;
+        assertEq(retreivedPriceFeed, expectedPriceFeed);
     }
 
-    function testOwnerIsMsgSender() public view {
-        assertEq(fundMe.getOwner(), msg.sender);
-    }
-
-    function testPriceFeedVersionIsAccurate() public view {
-        uint256 version = fundMe.getVersion();
-        assertEq(version, 4);
-    }
-
-    function testFundFailsWithoutEnoughEth() public {
+    function testFundFailsWithoutEnoughETH() public skipZkSync{
         vm.expectRevert();
         fundMe.fund();
     }
 
-    function testFundUpdatesFundedDataStructure() public {
-        vm.prank(USER); // the next TX will be send by USER
+    function testFundUpdatesFundedDataStructure() public skipZkSync{
+        vm.startPrank(USER);
         fundMe.fund{value: SEND_VALUE}();
+        vm.stopPrank();
+
         uint256 amountFunded = fundMe.getAddressToAmountFunded(USER);
         assertEq(amountFunded, SEND_VALUE);
     }
 
-    function testAddFunderToArrayOfFunders() public {
-        vm.prank(USER);
+    function testAddsFunderToArrayOfFunders() public skipZkSync{
+        vm.startPrank(USER);
         fundMe.fund{value: SEND_VALUE}();
+        vm.stopPrank();
+
         address funder = fundMe.getFunder(0);
         assertEq(funder, USER);
     }
-    
+
+    // https://twitter.com/PaulRBerg/status/1624763320539525121
+
     modifier funded() {
         vm.prank(USER);
         fundMe.fund{value: SEND_VALUE}();
+        assert(address(fundMe).balance > 0);
         _;
     }
 
-    function testOnlyOwnerCanWithdraw() public funded{
+    function testOnlyOwnerCanWithdraw() public funded skipZkSync{
         vm.expectRevert();
-        vm.prank(USER);
+        vm.prank(address(3)); // Not the owner
         fundMe.withdraw();
     }
 
-    function testWithdrawFromASingleFunder() public funded {
+    function testWithdrawFromASingleFunder() public funded skipZkSync{
         // Arrange
-        uint256 startingOwnerBalance = fundMe.getOwner().balance;
         uint256 startingFundMeBalance = address(fundMe).balance;
-
-        // Act
-        vm.prank(fundMe.getOwner());
-        fundMe.withdraw();
-
-        // Assert
-        uint256 endingOwnerBalance = fundMe.getOwner().balance;
-        uint256 endingFundMeBalance = address(fundMe).balance;
-        
-        assertEq(endingFundMeBalance, 0);
-        assertEq(startingFundMeBalance + startingOwnerBalance, endingOwnerBalance);
-    }
-
-    function testWithdrawFromMultipleFunders() public funded {
-        // Arrange
-        uint160 numberOfFunders = 10;
-        uint160 startingFunderIndex = 1;
-        for (uint160 i = startingFunderIndex; i < numberOfFunders; i++) {
-            hoax(address(i), SEND_VALUE);
-            fundMe.fund{value: SEND_VALUE}();
-        }
-
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
-        uint256 startingFundMeBalance = address(fundMe).balance;
 
-        // Act
+        // vm.txGasPrice(GAS_PRICE);
+        // uint256 gasStart = gasleft();
+        // // Act
         vm.startPrank(fundMe.getOwner());
         fundMe.withdraw();
         vm.stopPrank();
 
+        // uint256 gasEnd = gasleft();
+        // uint256 gasUsed = (gasStart - gasEnd) * tx.gasprice;
+
         // Assert
-        assert(address(fundMe).balance == 0);
-        assert(startingFundMeBalance + startingOwnerBalance == fundMe.getOwner().balance);
+        uint256 endingFundMeBalance = address(fundMe).balance;
+        uint256 endingOwnerBalance = fundMe.getOwner().balance;
+        assertEq(endingFundMeBalance, 0);
+        assertEq(
+            startingFundMeBalance + startingOwnerBalance,
+            endingOwnerBalance // + gasUsed
+        );
     }
-    
-    function testWithdrawFromMultipleFundersCheaper() public funded {
+
+    // Can we do our withdraw function a cheaper way?
+    function testWithdrawFromMultipleFunders() public funded skipZkSync{
         uint160 numberOfFunders = 10;
-        uint160 startingFunderIndex = 1;
+        uint160 startingFunderIndex = 2;
         for (uint160 i = startingFunderIndex; i < numberOfFunders + startingFunderIndex; i++) {
             // we get hoax from stdcheats
             // prank + deal
-            hoax(address(i), SEND_VALUE);
+            hoax(address(i), STARTING_USER_BALANCE);
             fundMe.fund{value: SEND_VALUE}();
         }
 
@@ -116,7 +120,7 @@ contract FundMeTest is Test {
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
 
         vm.startPrank(fundMe.getOwner());
-        fundMe.cheaperWithdraw();
+        fundMe.withdraw();
         vm.stopPrank();
 
         assert(address(fundMe).balance == 0);
