@@ -45,18 +45,11 @@ forge init --force
 
 ## Smart Contract testing
 
-Please run the following command in your terminal:
+you can test your codes using:
 
 ```Solidity
 forge test
 ```
-
-After the contracts are compiled you will see an output related to tests:
-
--   How many tests were found;
--   In which file;
--   Did they pass or not?;
--   Summary;
 
 ### How does `forge test` work?
 
@@ -100,7 +93,7 @@ We end the install command with `--no commit` in order to not create a git commi
 
 If we open the `lib` folder, we can see the `forge-std` which is installed automatically within the `forge init` setup and `chainlink-brownie-contracts` which we just installed. Look through the former, you'll see a folder called `contracts` then a folder called `src`. Here you can find different versions, and inside them, you can find a plethora of contracts, some of which we are going to use in this course. Here we can find the `AggregatorV3Interface` that we are importing in `FundMe.sol`.
 
-But if you open the `FundMe.sol` you'll see that we are importing `{AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";` not from `/foundry-fund-me-f23/lib/chainlink-brownie-contracts/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol`. How does Foundry know `@chainlink` to half of the path?
+But if you open the `FundMe.sol` you'll see that we are importing `{AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";` not from `/foundry-fund-me/lib/chainlink-brownie-contracts/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol`. How does Foundry know `@chainlink` to half of the path?
 
 Open `foundry.toml`. Below the last line of `[profile.default]` paste the following:
 
@@ -110,21 +103,15 @@ remappings = ['@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/'
 
 Now Forge knows to equivalate these. Let's try to compile now by calling `forge compile` or `forge build`.
 
-**Awesome! Everything complies.**
-
-Fixing dependencies in projects is one of the most undesirable things in smart contracts development/audit. Take it slow, make sure you select the proper GitHub repository path, make sure your remappings are solid and they match your imports and everything will be fine!
-
 ## Testing Smart Contracts
 
 Testing is a crucial step in your smart contract development journey, as the lack of tests can be a roadblock in the deployment stage or during a smart contract audit.
 
-So, buckle up as we unveil what separates the best developers from the rest: comprehensive, effective tests!
-
-Inside the `test` folder create a file called `FundMeTest.t.sol`. `.t.` is a naming convention of Foundry, please use it.
+Inside the `test` folder create a file called `FundMeTest.t.sol`. `.t.` is a naming convention of Foundry.
 
 The writing of a test contract shares the initial steps with the writing of a normal smart contract. We state the `SPDX-License-Identifier`, solidity version and a contract name:
 
-```javascript
+```solidity
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.18;
@@ -134,18 +121,18 @@ contract FundMeTest {
 }
 ```
 
-**Now the fun part!**
-
 To be able to run tests using Foundry we need to import the set of smart contracts Foundry comes with that contains a lot of prebuilt functions that make our lives 10x easier.
 
-```javascript
+```solidity
 import { Test } from 'forge-std/Test.sol';
 ```
 
 We also make sure our test contract inherits what we just imported.
 
-```javascript
+```solidity
 contract FundMeTest is Test{
+
+}
 ```
 
 The next logical step in our testing process is deploying the `FundMe` contract. In the future, we will learn how to import our deployment scripts, but for now, let's do the deployments right in our test file.
@@ -162,7 +149,7 @@ But before that, please create another function, called `testDemo`.
 
 Your test contract should look like this:
 
-```javascript
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
@@ -185,7 +172,7 @@ Ok, but how does it work? What's the order of things?
 
 Please update the contract to the following:
 
-```javascript
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
@@ -219,13 +206,13 @@ As you can see our test passed. What do we learn from this?
 
 Another nice way of testing this and also an important tool for debugging is `console.log`. The `console` library comes packed in the `Test.sol` that we imported, we just need to update the things we import to this:
 
-```javascript
+```solidity
 import { Test, console } from 'forge-std/Test.sol';
 ```
 
 Let's insert some `console.log` calls inside our contract:
 
-```javascript
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
@@ -268,10 +255,10 @@ Given that we want to see the printed logs, we will call `forge test -vv` (the n
 Ran 1 test for test/FundMe.t.sol:FundMeTest
 [PASS] testDemo() (gas: 9482)
 Logs:
-  This will get printed first!
-  This will get printed second!
-  Updraft is changing lives!
-  You can print multiple things, for example this is a uint256, followed by a bool: 1337 true
+    This will get printed first!
+    This will get printed second!
+    Updraft is changing lives!
+    You can print multiple things, for example this is a uint256, followed by a bool: 1337 true
 
 Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 422.20µs (63.30µs CPU time)
 ```
@@ -288,7 +275,7 @@ For that, we will first need to import it into our test file, then declare it as
 
 Delete `testDemo`. Make a new function called `testMinimumDollarIsFive`. As the name states, we will test if the `MINIMUM_USD` is equal to `5e18`.
 
-```javascript
+```solidity
     function testMinimumDollarIsFive() public {
         assertEq(fundMe.MINIMUM_USD(), 5e18);
     }
@@ -318,7 +305,7 @@ Let's continue writing tests for our `FundMe` contract. Let's test if the owner 
 
 Add the following function to your testing file:
 
-```javascript
+```solidity
 function testOwnerIsMsgSender() public {
     assertEq(fundMe.i_owner(), msg.sender);
 }
@@ -346,7 +333,7 @@ So ... why did it fail? Didn't we call the `new FundMe();` to deploy, making us 
 
 We can find the answer to these questions in various ways, in the last lesson we learned about `console.log`, let's add some `console.log`s to see more information about the two elements of the assertion.
 
-```javascript
+```solidity
     function testOwnerIsMsgSender() public {
         console.log(fundMe.i_owner());
         console.log(msg.sender);
@@ -361,11 +348,11 @@ Ran 2 tests for test/FundMe.t.sol:FundMeTest
 [PASS] testMinimumDollarIsFive() (gas: 5453)
 [FAIL. Reason: assertion failed] testOwnerIsMsgSender() (gas: 26680)
 Logs:
-  0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
-  0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
-  Error: a == b not satisfied [address]
+    0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
+    0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
+    Error: a == b not satisfied [address]
         Left: 0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
-       Right: 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
+        Right: 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
 
 Suite result: FAILED. 1 passed; 1 failed; 0 skipped; finished in 975.40µs (449.20µs CPU time)
 
@@ -382,15 +369,13 @@ Technically we are not the ones that deployed the `FundMe` contract. The `FundMe
 
 To test the above let's tweak the `testOwnerIsMsgSender` function:
 
-```javascript
+```solidity
     function testOwnerIsMsgSender() public {
         assertEq(fundMe.i_owner(), address(this));
     }
 ```
 
-Run `forge test`. It passes! Congratulations!
-
-Feel free to try and write other tests!
+Run `forge test`. It passes!
 
 ## Advanced deploy scripts
 
@@ -421,7 +406,7 @@ import {FundMe} from "../src/FundMe.sol";
 
 We are ready to define the contract. Remember how we did scripts a couple of lessons ago? Try to do it yourself.
 
-```javascript
+```solidity
 // SPDX-License_identifier: MIT
 
 pragma solidity ^0.8.18;
@@ -440,8 +425,6 @@ contract DeployFundMe is Script {
 
 Now let's try it with `forge script DeployFundMe`.
 
-Everything was ok! Congrats!
-
 ## Forking tests
 
 This course will cover 4 different types of tests:
@@ -457,7 +440,7 @@ For that to work, we need to be sure that Aggregator V3 runs the current version
 
 Add the following code to your test file:
 
-```javascript
+```solidity
 function testPriceFeedVersionIsAccurate() public {
     uint256 version = fundMe.getVersion();
     assertEq(version, 4);
@@ -474,7 +457,6 @@ Back to our problem, how can we fix this?
 
 Forking is the solution we need. If we run the test on an anvil instance that copies the current Sepolia state, where AggregatorV3 exists at that address, then our test function will not revert anymore. For that, we need a Sepolia RPC URL.
 
-Remember how in a [previous lesson we delpoyed a smart contract on Sepolia](https://updraft.cyfrin.io/courses/foundry/foundry-simple-storage/deploying-smart-contract-testnet-sepolia)? It's similar, we can use the same RPC we used back then.
 
 Thus:
 
@@ -494,8 +476,6 @@ Ran 1 test for test/FundMe.t.sol:FundMeTest
 [PASS] testPriceFeedVersionIsAccurate() (gas: 14118)
 Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 2.29s (536.03ms CPU time)
 ```
-
-Nice!
 
 Please keep in mind that forking uses the Alchemy API, it's not a good idea to run all your tests on a fork every single time. But, sometimes as in this case, you can't test without. It's very important that our test have a high **coverage**, to ensure all our code is battle tested.
 
@@ -524,19 +504,6 @@ Ran 1 test suite in 2.89s (1.91s CPU time): 3 tests passed, 0 failed, 0 skipped 
 ```
 
 These are rookie numbers! Maybe 100% is not feasible, but 13% is as good as nothing. In the next lessons, we will up our game and increase these numbers!
-
-### Changes on test command
-
-On the lastes version of Foundry, the test flag -m is not supported, so instead of using the command.
-
-```
-forge test -m testPriceFeedVersionIsAccurate -vvv --fork-url $SEPOLIA_RPC_URL
-```
-You need to use:
-
-```
-forge test --mt testPriceFeedVersionIsAccurate -vvvv --fork-url $SEPOLIA_RPC_URL
-```
 
 ## Refactoring code and test
 
@@ -587,7 +554,7 @@ function getConversionRate(
 }
 ```
 
-1. Back in `FundMe.sol` pass the s\_priceFeed as input for `getConversionRate` in the `fund` function.
+1. Back in `FundMe.sol` pass the s_priceFeed as input for `getConversionRate` in the `fund` function.
 
 Take a moment and think if we missed updating anything in our project.
 
@@ -806,8 +773,6 @@ Magic numbers refer to literal values directly included in the code without any 
 
 Write clean, maintainable, and less error-prone code. You make your own life easier, you make your auditor(s) life easier. Use constants and configuration variables.
 
-Let's apply this.
-
 Open `HelperConfig.s.sol`, go to the `getAnvilEthConfig` function and delete the `8` corresponding to the decimals and `2000e8` corresponding to the `_initialAnswer` that are used inside the `MockV3Aggregator`'s constructor.
 
 At the top of the `HelperConfig` contract create two new variables:
@@ -858,7 +823,7 @@ Everything passes! Amazing! Our test just became network agnostic. Next-level st
 Take a break, come back in 15 minutes and let's go on!
 
 
-## Foundry magic: Cheatcodes
+## Foundry tests: Cheatcodes
 
 Now that we fixed our deployment script, and our tests have become blockchain agnostic, let's get back to increasing that coverage we were talking about some lessons ago.
 
@@ -905,8 +870,6 @@ function getFunder(uint256 index) public view returns (address) {
     return s_funders[index];
 }
 ```
-
-Pfeww! Great now we can test points 2 and 3 indicated above:
 
 Add the following test in `FundMe.t.sol`:
 
@@ -1000,9 +963,7 @@ Let's run `forge test --mt testFundUpdatesFundDataStructure` again.
 
 I know a lot of new cheatcodes were introduced in this lesson. Keep in mind that these are the most important cheatcodes there are, and you are going to use them over and over again. Regardless if you are developing or auditing a project, that project will always have at least an `owner` and a `user`. These two would always have different access to different functionalities. Most of the time the user needs some kind of balance, be it ETH or some other tokens. So, making a new address, giving it some balance, and pranking it to act as a caller for a tx will 100% be part of your every test file.
 
-## Foundry tests cheatcodes
-
-In the previous lesson, we tested if the `s_addressToAmountFunded` is updated correctly. Continuing from there we need to test that `funders` array is updated with `msg.sender`.
+## Adding more coverage to the tests
 
 Add the following test to your `FundMe.t.sol`:
 
@@ -1081,10 +1042,6 @@ function getOwner() public view returns (address) {
 ```
 
 Make sure to make `i_owner` private.
-
-Cool!
-
-Let's discuss more about structuring our tests.
 
 The arrange-act-assert (AAA) methodology is one of the simplest and most universally accepted ways to write tests. As the name suggests, it comprises three parts:
 
@@ -1668,7 +1625,7 @@ Ok, now with that out of the way, let's work on our scripts.
 
 Put the following code in `Interactions.s.sol`:
 
-```javascript
+```solidity
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
@@ -1725,7 +1682,7 @@ Inside the `integration` folder create a new file called `FundMeTestIntegration.
 
 Paste the following code inside it:
 
-```javascript
+```solidity
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.19;
