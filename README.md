@@ -1,14 +1,5 @@
 # Foundry Fund Me
 
-In this section, we'll refer to the `FundMe` contract we built in the previous section. Additionally, we will explore storage using the [`FunWithStorage`](https://github.com/MRAlirad/foundry-fund-me/blob/master/src/exampleContracts/FunWithStorage.sol) contract and interact with it using `cast`.
-
-We'll also learn professional deployment techniques on different chains with Foundry **[scripts](https://github.com/MRAlirad/foundry-fund-me/blob/master/script/DeployFundMe.s.sol)**. They will enable us to interact with contracts through **reproducible actions** instead of typing commands manually each time.
-
-Furthermore, we'll cover making contracts more gas-efficient, some debugging techniques, and setting up a professional development environment.
-Lastly, we'll implement a lot of **tests** to ensure the reliability and security of our smart contracts.
-
-## Setup
-
 You will learn:
 
 -   How to push your project to GitHub
@@ -21,11 +12,9 @@ You will learn:
 -   How to make our contracts more gas efficient
 -   And many more interesting things!
 
-### Fund Me
+## Setup
 
-Going through the [repo](https://github.com/MRAlirad/foundry-fund-me) we can see that our contract is in the `src` folder. Let's open `FundMe.sol`.
-
-As you can see we are employing some advanced tools/standard naming conventions:
+There are some advanced tools/standard naming conventions:
 
 -   We use a named error `FundMe__NotOwner();`
 -   We use all caps for constants
@@ -36,12 +25,9 @@ creating a Foundry project
 
 ```Solidity
 forge init
-
 // or
-
 forge init --force
 ```
-
 
 ## Smart Contract testing
 
@@ -80,8 +66,6 @@ Call the following:
 ```Solidity
 forge install smartcontractkit/chainlink-brownie-contracts@1.3.0 --no-commit
 ```
-
-Wait for it to finish.
 
 We used `forge install` to ask Forge to install something in our project. What? We specified the path to a GitHub repository, this also could have been a raw URL. What version? Following the path to a GitHub repository you can add an `@` and then you can specify:
 
