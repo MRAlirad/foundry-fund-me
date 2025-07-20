@@ -285,18 +285,13 @@ Try to change the right side of the `assertEq` line to check what a failed test 
 
 ## Debug Solidity Tests
 
-Let's continue writing tests for our `FundMe` contract. Let's test if the owner (which should be us) is recorded properly.
-
-Add the following function to your testing file:
+Let's test if the owner (which should be us) is recorded properly.
 
 ```solidity
 function testOwnerIsMsgSender() public {
     assertEq(fundMe.i_owner(), msg.sender);
 }
-
 ```
-
-Run it via `forge test`.
 
 Output:
 
@@ -315,7 +310,7 @@ Encountered 1 failing test in test/FundMe.t.sol:FundMeTest
 
 So ... why did it fail? Didn't we call the `new FundMe();` to deploy, making us the owner?
 
-We can find the answer to these questions in various ways, in the last lesson we learned about `console.log`, let's add some `console.log`s to see more information about the two elements of the assertion.
+Let's add some `console.log`s to see more information about the two elements of the assertion.
 
 ```solidity
     function testOwnerIsMsgSender() public {
@@ -403,7 +398,7 @@ contract DeployFundMe is Script {
         vm.startBroadcast();
         new FundMe();
         vm.stopBroadcast();
-    }  
+    }
 }
 ```
 
@@ -487,7 +482,7 @@ Ran 1 test suite in 2.89s (1.91s CPU time): 3 tests passed, 0 failed, 0 skipped 
 | Total                     | 13.04% (3/23) | 14.71% (5/34) | 0.00% (0/6)   | 22.22% (2/9) |
 ```
 
-These are rookie numbers! Maybe 100% is not feasible, but 13% is as good as nothing. In the next lessons, we will up our game and increase these numbers!
+These are rookie numbers! Maybe 100% is not feasible, but 13% is as good as nothing.
 
 ## Refactoring code and test
 
@@ -599,7 +594,6 @@ Run `forge test --fork-url $SEPOLIA_RPC_URL` again.
 
 ## Deploy a mock priceFeed
 
-In the previous lesson, we refactored our contracts to avoid being forced to use Sepolia every single time when we ran tests. The problem is we didn't quite fix this aspect. We made our contracts more flexible by changing everything for us to input the `priceFeed` address only once. We can do better!
 
 It is very important to be able to run our all tests locally. We will do this using a **mock contract**.
 
@@ -697,9 +691,7 @@ Now that we've configured it for one chain, Sepolia, we can do the same with any
 
 This type of flexibility elevates your development game to the next level. Being able to easily test your project on different chains just by changing your RPC\_URL is an ability that differentiates you from a lot of solidity devs who fumble around with hardcoded addresses.
 
-In the next lessons, we will learn how to use Anvil in our current setup. Stay tuned.
-
-## Solving the Anvil problem
+## Refactoring the mock smart contract
 
 When we needed the Sepolia `priceFeed` we made sure that our deployments script pointed to it. How can we solve this in Anvil, because the contract that we need doesn't exist there. Simple, we deploy mocks.
 
@@ -718,9 +710,7 @@ contract HelperConfig is Script {
 }
 ```
 
-In order to be able to deploy a mock contract we need ... a mock contract. So, in `test` folder please create a new folder called `mocks`. Inside `mocks` create a new file `MockV3Aggregator.sol`. Rewriting the AggregatorV3 as a mock is not the easiest task out there. Please copy the contents of [this contract](https://github.com/Cyfrin/foundry-fund-me-f23/blob/main/test/mock/MockV3Aggregator.sol) into your newly created file.
-
-What next?
+In order to be able to deploy a mock contract we need ... a mock contract. So, in `test` folder please create a new folder called `mocks`. Inside `mocks` create a new file `MockV3Aggregator.sol`. Rewriting the AggregatorV3 as a mock is not the easiest task out there. Please copy the contents of [this contract](https://github.com/MRAlirad/foundry-fund-me/blob/master/test/mock/MockV3Aggregator.sol) into your newly created file.
 
 We need to import this in our `HelperConfig.s.sol` file and deploy it in the `getAnvilEthConfig` then return the address.
 
